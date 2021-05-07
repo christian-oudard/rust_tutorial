@@ -1,0 +1,9 @@
+[package]
+name = "rusqlite_sqlcipher"
+version = "0.1.0"
+authors = ["Christian Oudard <christian.oudard@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+rusqlite = { version = "0.24.2", features = ["sqlcipher", "bundled"] }
+libsqlite3-sys = { version = ">=0.8.0, <0.21.0", optional = false, features = ["min_sqlite_version_3_7_16", "sqlcipher"] }

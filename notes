@@ -1,0 +1,38 @@
+Tutorials
+https://doc.rust-lang.org/book/
+http://nercury.github.io/rust/opengl/tutorial/2018/02/08/opengl-in-rust-from-scratch-00-setup.html
+Vim Plugins
+https://github.com/rust-lang/rust.vim
+https://github.com/racer-rust/vim-racer
+
+Install Rust:
+$ sudo snap install --classic rustup
+$ rustup toolchain install stable
+$ rustup update
+$ rustc --version
+rustc 1.47.0 (18bf6b4f0 2020-10-07)
+
+Start a project:
+$ cargo new projectname
+
+Compile a project:
+$ cargo build
+
+Run the code
+$ cargo run
+
+Any 0.* version of a dependency, in Cargo.toml:
+[dependencies]
+depname = "^0"
+
+Cross compile to ARM:
+https://medium.com/hackernoon/compiling-rust-for-the-raspberry-pi-49fdcd7df658
+$ rustup target add arm-unknown-linux-gnueabi
+$ sudo apt install gcc-arm-linux-gnueabi
+$ vim  ~/.cargo/config
+    [target.arm-unknown-linux-gnueabi]
+    linker = "arm-linux-gnueabi-gcc"
+$ cargo build --target=arm-unknown-linux-gnueabi
+
+Show package dependencies:
+$ cargo tree

@@ -1,0 +1,17 @@
+[package]
+name = "basic"
+version = "0.1.0"
+authors = ["Christian Oudard <christian.oudard@gmail.com>"]
+edition = "2018"
+
+[[bin]]
+name = "hello"
+
+[[bin]]
+name = "option"
+
+[[bin]]
+name = "default"
+
+[dependencies]
+

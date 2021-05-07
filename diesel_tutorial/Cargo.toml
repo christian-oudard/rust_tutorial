@@ -1,0 +1,26 @@
+[package]
+name = "diesel_tutorial"
+version = "0.1.0"
+
+[dependencies]
+diesel = { version = "1.4.6", features = ["sqlite"] }
+dotenv = "0.15"
+
+[[bin]]
+name = "show_posts"
+doc = false
+
+[[bin]]
+name = "write_post"
+doc = false
+
+[[bin]]
+name = "delete_post"
+doc = false
+
+[[bin]]
+name = "publish_post"
+doc = false
+
+[lib]
+doc = false

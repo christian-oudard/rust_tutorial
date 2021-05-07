@@ -1,0 +1,11 @@
+[package]
+name = "diesel_sqlcipher"
+version = "0.1.0"
+authors = ["Christian Oudard <christian.oudard@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+diesel = { version = "1.4.6", features = ["sqlite"] }
+diesel_migrations = { version = "1.4.0", features = ["sqlite"] }
+libsqlite3-sys = { version = ">=0.8.0, <0.21.0", optional = false, features = ["min_sqlite_version_3_7_16", "sqlcipher"] }
+dotenv = "0.15.0"
