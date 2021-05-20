@@ -1,5 +1,4 @@
 use super::schema::posts;
-use diesel::prelude::*;
 
 #[derive(Queryable)]
 pub struct Post {

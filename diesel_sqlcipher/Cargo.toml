@@ -1,11 +1,10 @@
 [package]
-name = "diesel_sqlcipher"
+name = "diesel_sqlcipher_test"
 version = "0.1.0"
 authors = ["Christian Oudard <christian.oudard@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-diesel = { version = "1.4.6", features = ["sqlite"] }
-diesel_migrations = { version = "1.4.0", features = ["sqlite"] }
-libsqlite3-sys = { version = ">=0.8.0, <0.21.0", optional = false, features = ["min_sqlite_version_3_7_16", "sqlcipher"] }
+diesel = { git = "https://github.com/mobilecoinofficial/diesel", branch = "1.4.x-bundled-sqlcipher", features = ["sqlite", "sqlcipher-bundled"] }
+diesel_migrations = { git = "https://github.com/mobilecoinofficial/diesel", branch = "1.4.x-bundled-sqlcipher", features = ["sqlite"] }
 dotenv = "0.15.0"
