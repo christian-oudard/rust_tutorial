@@ -1,8 +1,11 @@
 use serde::{Deserialize, Serialize};
-use serde_json::{Result, Value};
+use serde_json::{
+    Result, Value,
+    ser::to_string_pretty,
+};
 
 fn main() {
-    untyped_example().expect("serde error");
+    // untyped_example().expect("serde error");
     typed_example().expect("serde error");
 }
 
@@ -19,45 +22,44 @@ fn untyped_example() -> Result<()> {
         }"#;
 
     // Parse the string of data into serde_json::Value.
-    let v: Value = serde_json::from_str(data)?;
+    let mut v: Value = serde_json::from_str(data)?;
 
     // Access parts of the data by indexing with square brackets.
     println!("Please call {}, aged {}, at the number {}", v["name"].as_str().expect("name not a string"), v["age"], v["phones"][0]);
+
+    v.as_object_mut().unwrap().remove("age");
+    println!("{}", to_string_pretty(&v)?);
 
     Ok(())
 }
 
 
 #[derive(Serialize, Deserialize)]
-struct Person {
-    name: String,
-    age: u8,
-    phones: Vec<String>,
+struct Response {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    result: Option<RPCResult>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    error: Option<RPCError>,
 }
 
-fn typed_example() -> Result<()> {
-    // Some JSON input data as a &str. Maybe this comes from the user.
-    let data = r#"
-        {
-            "name": "John Doe",
-            "age": 43,
-            "associates": {
-                "brother": "Bob",
-                "friend": "Carol"
-            },
-            "phones": [
-                "+44 1234567",
-                "+44 2345678"
-            ]
-        }"#;
+#[derive(Serialize, Deserialize, Debug)]
+struct RPCResult(String);
+#[derive(Serialize, Deserialize, Debug)]
+struct RPCError(String);
 
-    // Parse the string of data into a Person object. This is exactly the
-    // same function as the one that produced serde_json::Value above, but
-    // now we are asking it for a Person as output.
-    let p: Person = serde_json::from_str(data)?;
+
+fn typed_example() -> Result<()> {
+    let response: Response = serde_json::from_str(r#"
+        {
+            "result": null,
+            "error": "error!"
+        }
+    "#)?;
 
     // Do things just like with any other Rust data structure.
-    println!("Please call {} at the number {}", p.name, p.phones[1]);
+    println!("result: {:?}", response.result);
+    println!("{}", to_string_pretty(&response)?);
 
     Ok(())
 }
