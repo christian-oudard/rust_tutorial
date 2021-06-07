@@ -1,4 +1,0 @@
-CREATE TABLE accounts (
-    id INTEGER NOT NULL PRIMARY KEY,
-    entropy BLOB NOT NULL
-);
