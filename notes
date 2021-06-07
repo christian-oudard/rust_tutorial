@@ -36,3 +36,7 @@ $ cargo build --target=arm-unknown-linux-gnueabi
 
 Show package dependencies:
 $ cargo tree
+
+Rust Language Server
+https://github.com/dense-analysis/ale/blob/master/doc/ale-rust.txt
+$ rustup component add rls rustfmt rust-analysis rust-src
