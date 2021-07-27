@@ -1,21 +1,12 @@
 [package]
-name = "grpc_tutorial"
+name = "async_tutorial"
 version = "0.1.0"
 authors = ["Christian Oudard <christian.oudard@gmail.com>"]
 edition = "2018"
-build = "build.rs"
-
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-grpcio = { path = "/home/christian/third-party-code/grpc-rs" }
-grpcio-proto = "0.9.0"
-protobuf = "~2"
-log = "0.4.0"
-env_logger = "0.8.4"
 futures = "0.3"
-
-[build-dependencies]
-protoc-grpcio = "3.0.0"
-
+rand = "0.8.4"
+async-std = "1.9.0"

@@ -18,6 +18,7 @@ use grpc_tutorial::{
 use grpcio::{
     ChannelBuilder, ClientStreamingSink, Environment, RequestStream, ResourceQuota, RpcContext,
     ServerBuilder, UnarySink,
+    MetadataBuilder,
 };
 
 #[derive(Clone)]
@@ -25,11 +26,24 @@ struct GreeterService;
 
 impl Greeter for GreeterService {
     fn say_hello(&mut self, ctx: RpcContext<'_>, req: HelloRequest, sink: UnarySink<HelloReply>) {
+        info!("say_hello");
+        // Show metadata.
+        info!("Received headers:");
+        for (key, val) in ctx.request_headers() {
+            info!("{}: {}", key, std::str::from_utf8(val).unwrap());
+        }
+
         info!("Received: {:?}", req);
         let msg = format!("Hello {}", req.get_name());
         let mut resp = HelloReply::default();
         resp.set_message(msg);
+
+        let mut builder = MetadataBuilder::with_capacity(3);
+        builder.add_str("k2", "v2").unwrap();
+        let metadata = builder.build();
+
         let f = sink
+            .set_headers(metadata)
             .success(resp)
             .map_err(move |e| error!("failed to reply {:?}: {:?}", req, e))
             .map(|_| ());
@@ -42,10 +56,18 @@ impl Greeter for GreeterService {
         mut stream: RequestStream<HelloRequest>,
         sink: ClientStreamingSink<HelloReply>,
     ) {
+        info!("multi_hello");
+        // Show metadata.
+        info!("Received headers:");
+        for (key, val) in ctx.request_headers() {
+            info!("{}: {}", key, std::str::from_utf8(val).unwrap());
+        }
+
         let f = async move {
             // Collect names from stream.
             let mut names: Vec<String> = Vec::new();
             while let Some(req) = stream.try_next().await? {
+                info!("Received: {:?}", req);
                 names.push(req.get_name().to_owned());
             }
 

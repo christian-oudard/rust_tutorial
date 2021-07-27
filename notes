@@ -40,3 +40,46 @@ $ cargo tree
 Rust Language Server
 https://github.com/dense-analysis/ale/blob/master/doc/ale-rust.txt
 $ rustup component add rls rustfmt rust-analysis rust-src
+
+
+### Printing
+
+format!
+print!
+println!
+
+"{}" invokes Display trait
+"{:?}" invokes Debug trait
+"{:#}" alternate format, usually multi-line
+
+
+### Logging
+
+API provided by `log` crate.
+Implementation provided by `env_logger` crate.
+
+dbg! can show local variables easily
+
+
+### Crates and Modules
+
+`extern crate` is no longer needed as of Rust 2018, just do `use` instead.
+
+
+### Async
+
+Can't use std::thread::sleep, which is blocking. Instead use async_std::task::sleep.
+
+Futures require their result to be a Pin. This causes problems unless you can also create an Unpin implementation for the result.
+Unpin auto-trait is not created for tuples, because they do not have a fixed memory layout. Use a real struct instead.
+
+
+### Scratch
+
+See auto trait implementations via cargo doc:
+    $ cargo doc --document-private-items --open 
+
+The macro todo!() panics, but can be used as a placeholder for functions that need to return a result of a
+particular type.
+
+
