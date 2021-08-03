@@ -41,6 +41,10 @@ Rust Language Server
 https://github.com/dense-analysis/ale/blob/master/doc/ale-rust.txt
 $ rustup component add rls rustfmt rust-analysis rust-src
 
+### Cargo-edit
+
+$ cargo install cargo-edit
+$ cargo add base64
 
 ### Printing
 
@@ -66,6 +70,9 @@ dbg! can show local variables easily
 `extern crate` is no longer needed as of Rust 2018, just do `use` instead.
 
 
+### String encoding and decoding
+
+
 ### Async
 
 Can't use std::thread::sleep, which is blocking. Instead use async_std::task::sleep.
@@ -81,5 +88,3 @@ See auto trait implementations via cargo doc:
 
 The macro todo!() panics, but can be used as a placeholder for functions that need to return a result of a
 particular type.
-
-

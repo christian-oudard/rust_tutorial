@@ -12,7 +12,7 @@ use grpc_tutorial::{
         helloworld_grpc::GreeterClient,
     },
 };
-use grpcio::{CallOption, ChannelBuilder, EnvBuilder, MetadataBuilder, Result, WriteFlags, ClientUnaryReceiver};
+use grpcio::{CallOption, ChannelBuilder, EnvBuilder, Metadata, MetadataBuilder, Result, WriteFlags, ClientUnaryReceiver};
 
 async fn async_main() -> Result<()> {
     // Connect to server.
@@ -30,16 +30,17 @@ async fn async_main() -> Result<()> {
     // Send a single call.
     let mut req = HelloRequest::default();
     req.set_name("world".to_owned());
-    let receiver: ClientUnaryReceiver<HelloReply> = client.say_hello_async_opt(&req, call_opt.clone()).expect("rpc");
+    let mut receiver: ClientUnaryReceiver<HelloReply> = client.say_hello_async_opt(&req, call_opt.clone()).expect("rpc");
 
-    let server_metadata = receiver.headers().await;
+    let reply: HelloReply = receiver.message().await?;
+
+    info!("Greeter received: {}", reply.get_message());
+
+    let server_metadata: &Metadata = receiver.headers().await.unwrap();
     info!("Received headers:");
-    for (key, val) in &server_metadata {
+    for (key, val) in server_metadata {
         info!("{}: {}", key, std::str::from_utf8(val).unwrap());
     }
-
-    let reply: HelloReply = receiver.await?;
-    info!("Greeter received: {}", reply.get_message());
 
     // Send a list of names as a stream.
     let (mut sink, receiver) = client.multi_hello_opt(call_opt.clone())?;
