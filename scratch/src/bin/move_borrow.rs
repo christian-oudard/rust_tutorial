@@ -16,7 +16,7 @@ fn make_thing() -> Thing {
 
 fn change_thing(x: &mut Thing) {
     // let Thing(ref mut value) = x;
-    // *value = false;
+    // *value = true;
     x.0 = false;
 }
 
