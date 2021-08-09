@@ -25,15 +25,6 @@ Any 0.* version of a dependency, in Cargo.toml:
 [dependencies]
 depname = "^0"
 
-Cross compile to ARM:
-https://medium.com/hackernoon/compiling-rust-for-the-raspberry-pi-49fdcd7df658
-$ rustup target add arm-unknown-linux-gnueabi
-$ sudo apt install gcc-arm-linux-gnueabi
-$ vim  ~/.cargo/config
-    [target.arm-unknown-linux-gnueabi]
-    linker = "arm-linux-gnueabi-gcc"
-$ cargo build --target=arm-unknown-linux-gnueabi
-
 Show package dependencies:
 $ cargo tree
 

@@ -57,11 +57,17 @@ impl Greeter for GreeterService {
         sink: ClientStreamingSink<HelloReply>,
     ) {
         info!("multi_hello");
-        // Show metadata.
+        // Show metadata from client.
         info!("Received headers:");
         for (key, val) in ctx.request_headers() {
             info!("{}: {}", key, std::str::from_utf8(val).unwrap());
         }
+
+        // Send metadata to client.
+        let mut builder = MetadataBuilder::with_capacity(3);
+        builder.add_str("k2", "v2").unwrap();
+        let metadata = builder.build();
+        let sink = sink.set_headers(metadata);
 
         let f = async move {
             // Collect names from stream.
