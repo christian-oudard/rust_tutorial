@@ -43,7 +43,7 @@ async fn async_main() -> Result<()> {
     }
 
     // Send a list of names as a stream.
-    let (mut sink, receiver) = client.multi_hello_opt(call_opt.clone())?;
+    let (mut sink, mut receiver) = client.multi_hello_opt(call_opt.clone())?;
     for name in vec!["Alice", "Bob", "Carol"] {
         let mut req = HelloRequest::default();
         req.set_name(name.to_owned());
@@ -54,8 +54,15 @@ async fn async_main() -> Result<()> {
     sink.close().await?;
 
     // Receive reply.
-    let reply: HelloReply = receiver.await?;
+    let reply: HelloReply = receiver.message().await?;
     info!("Multi-greeter received: {}", reply.get_message());
+
+    let server_metadata: &Metadata = receiver.headers().await.unwrap();
+    info!("Received headers:");
+    for (key, val) in server_metadata {
+        info!("{}: {}", key, std::str::from_utf8(val).unwrap());
+    }
+    
     Ok(())
 }
 

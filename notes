@@ -1,6 +1,11 @@
-Tutorials
+Books
 https://doc.rust-lang.org/book/
+https://doc.rust-lang.org/rust-by-example/index.html
+https://doc.rust-lang.org/nightly/nomicon/intro.html
+
+OpenGL
 http://nercury.github.io/rust/opengl/tutorial/2018/02/08/opengl-in-rust-from-scratch-00-setup.html
+
 Vim Plugins
 https://github.com/rust-lang/rust.vim
 https://github.com/racer-rust/vim-racer
