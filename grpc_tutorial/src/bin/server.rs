@@ -1,8 +1,8 @@
 use log::{error, info};
+use std::fmt::Write;
 use std::io::Read;
 use std::sync::Arc;
 use std::{io, thread};
-use std::fmt::Write;
 
 use futures::channel::oneshot;
 use futures::executor::block_on;
@@ -16,9 +16,8 @@ use grpc_tutorial::{
     },
 };
 use grpcio::{
-    ChannelBuilder, ClientStreamingSink, Environment, RequestStream, ResourceQuota, RpcContext,
-    ServerBuilder, UnarySink,
-    MetadataBuilder,
+    DuplexSink, ChannelBuilder, ClientStreamingSink, Environment, MetadataBuilder, RequestStream,
+    ResourceQuota, RpcContext, ServerBuilder, ServerStreamingSink, UnarySink, WriteFlags
 };
 
 #[derive(Clone)]
@@ -84,8 +83,8 @@ impl Greeter for GreeterService {
             } else if names.len() == 1 {
                 write!(&mut msg, "Hello, {}!", names.first().unwrap()).unwrap();
             } else {
-            write!(&mut msg, "Hello, ").unwrap();
-                for name in names[0..names.len()-1].iter() {
+                write!(&mut msg, "Hello, ").unwrap();
+                for name in names[0..names.len() - 1].iter() {
                     write!(&mut msg, "{}, ", name).unwrap();
                 }
                 write!(&mut msg, "and {}!", names.last().unwrap()).unwrap();
@@ -94,6 +93,65 @@ impl Greeter for GreeterService {
             let mut resp = HelloReply::default();
             resp.set_message(msg.to_owned());
             sink.success(resp).await?;
+            Ok(())
+        }
+        .map_err(|e: grpcio::Error| error!("failed to reply: {:?}", e))
+        .map(|_| ());
+        ctx.spawn(f)
+    }
+
+    fn multi_reply(
+        &mut self,
+        ctx: RpcContext<'_>,
+        req: HelloRequest,
+        mut sink: ServerStreamingSink<HelloReply>,
+    ) {
+        let name = req.get_name();
+        info!("Received \"{}\"", name);
+
+        let msgs = vec![
+            format!("Good morning, {}.", name),
+            format!("Good afternoon, {}.", name),
+            format!("Goodnight, {}.", name),
+        ];
+
+        let f = async move {
+            for msg in msgs {
+                let mut resp = HelloReply::default();
+                resp.set_message(msg);
+                sink.send((resp, WriteFlags::default())).await?;
+            }
+            sink.close().await?;
+            Ok(())
+        }
+        .map_err(|e: grpcio::Error| error!("failed to reply: {:?}", e))
+        .map(|_| ());
+        ctx.spawn(f)
+    }
+
+    fn duplex_hello(
+        &mut self,
+        ctx: RpcContext<'_>,
+        mut stream: RequestStream<HelloRequest>,
+        mut sink: DuplexSink<HelloReply>,
+    ) {
+        let f = async move {
+            let mut resp = HelloReply::default();
+            resp.set_message("Hi, what are your names?".to_string());
+            sink.send((resp, WriteFlags::default())).await?;
+
+            while let Some(req) = stream.try_next().await? {
+                let msg = format!("Hello {}", req.get_name());
+                let mut resp = HelloReply::default();
+                resp.set_message(msg);
+                sink.send((resp, WriteFlags::default())).await?;
+            }
+
+            let mut resp = HelloReply::default();
+            resp.set_message("Goodbye".to_string());
+            sink.send((resp, WriteFlags::default())).await?;
+
+            sink.close().await?;
             Ok(())
         }
         .map_err(|e: grpcio::Error| error!("failed to reply: {:?}", e))

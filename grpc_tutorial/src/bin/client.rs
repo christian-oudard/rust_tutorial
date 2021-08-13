@@ -12,7 +12,10 @@ use grpc_tutorial::{
         helloworld_grpc::GreeterClient,
     },
 };
-use grpcio::{CallOption, ChannelBuilder, EnvBuilder, Metadata, MetadataBuilder, Result, WriteFlags, ClientUnaryReceiver};
+use grpcio::{
+    CallOption, ChannelBuilder, ClientSStreamReceiver, ClientUnaryReceiver, EnvBuilder, Metadata,
+    MetadataBuilder, Result, WriteFlags,
+};
 
 async fn async_main() -> Result<()> {
     // Connect to server.
@@ -30,7 +33,9 @@ async fn async_main() -> Result<()> {
     // Send a single call.
     let mut req = HelloRequest::default();
     req.set_name("world".to_owned());
-    let mut receiver: ClientUnaryReceiver<HelloReply> = client.say_hello_async_opt(&req, call_opt.clone()).expect("rpc");
+    let mut receiver: ClientUnaryReceiver<HelloReply> = client
+        .say_hello_async_opt(&req, call_opt.clone())
+        .expect("rpc");
 
     let reply: HelloReply = receiver.message().await?;
 
@@ -53,7 +58,6 @@ async fn async_main() -> Result<()> {
     }
     sink.close().await?;
 
-    // Receive reply.
     let reply: HelloReply = receiver.message().await?;
     info!("Multi-greeter received: {}", reply.get_message());
 
@@ -62,7 +66,36 @@ async fn async_main() -> Result<()> {
     for (key, val) in server_metadata {
         info!("{}: {}", key, std::str::from_utf8(val).unwrap());
     }
-    
+
+    // Send a name, get several greetings back.
+    let mut req = HelloRequest::default();
+    req.set_name("Jeff".to_string());
+    let mut receiver: ClientSStreamReceiver<HelloReply> = client.multi_reply(&req).unwrap();
+    while let Some(reply) = receiver.try_next().await? {
+        info!("{}", reply.get_message());
+    }
+
+    // Duplex conversation
+    let (mut sink, mut receiver) = client.duplex_hello()?;
+    let send = async move {
+        for name in vec!["Alice", "Bob", "Carol"] {
+            let mut req = HelloRequest::default();
+            req.set_name(name.to_owned());
+            info!("Sending \"{}\".", name);
+            sink.send((req.to_owned(), WriteFlags::default())).await?;
+            std::thread::sleep(std::time::Duration::from_millis(10));
+        }
+        sink.close().await?;
+        Ok(()) as Result<_>
+    };
+    let receive = async move {
+        while let Some(reply) = receiver.try_next().await? {
+            info!("{}", reply.get_message());
+        }
+        Ok(()) as Result<_>
+    };
+    let (sr, rr) = futures::join!(send, receive);
+    sr.and(rr)?;
     Ok(())
 }
 

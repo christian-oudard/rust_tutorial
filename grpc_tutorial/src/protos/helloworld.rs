@@ -344,11 +344,13 @@ impl ::protobuf::reflect::ProtobufValue for HelloReply {
 static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x10helloworld.proto\x12\nhelloworld\"\"\n\x0cHelloRequest\x12\x12\n\
     \x04name\x18\x01\x20\x01(\tR\x04name\"&\n\nHelloReply\x12\x18\n\x07messa\
-    ge\x18\x01\x20\x01(\tR\x07message2\x89\x01\n\x07Greeter\x12<\n\x08SayHel\
+    ge\x18\x01\x20\x01(\tR\x07message2\x90\x02\n\x07Greeter\x12<\n\x08SayHel\
     lo\x12\x18.helloworld.HelloRequest\x1a\x16.helloworld.HelloReply\x12@\n\
     \nMultiHello\x12\x18.helloworld.HelloRequest\x1a\x16.helloworld.HelloRep\
-    ly(\x01B6\n\x1bio.grpc.examples.helloworldB\x0fHelloWorldProtoP\x01\xa2\
-    \x02\x03HLWb\x06proto3\
+    ly(\x01\x12@\n\nMultiReply\x12\x18.helloworld.HelloRequest\x1a\x16.hello\
+    world.HelloReply0\x01\x12C\n\x0bDuplexHello\x12\x18.helloworld.HelloRequ\
+    est\x1a\x16.helloworld.HelloReply(\x010\x01B6\n\x1bio.grpc.examples.hell\
+    oworldB\x0fHelloWorldProtoP\x01\xa2\x02\x03HLWb\x06proto3\
 ";
 
 static file_descriptor_proto_lazy: ::protobuf::rt::LazyV2<::protobuf::descriptor::FileDescriptorProto> = ::protobuf::rt::LazyV2::INIT;
