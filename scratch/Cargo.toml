@@ -6,3 +6,4 @@ edition = "2018"
 
 [dependencies]
 base64 = "0.13.0"
+cached = "^0"
