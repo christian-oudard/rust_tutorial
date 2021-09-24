@@ -27,22 +27,18 @@ impl Greeter for GreeterService {
     fn say_hello(&mut self, ctx: RpcContext<'_>, req: HelloRequest, sink: UnarySink<HelloReply>) {
         info!("say_hello");
         // Show metadata.
-        info!("Received headers:");
-        for (key, val) in ctx.request_headers() {
-            info!("{}: {}", key, std::str::from_utf8(val).unwrap());
-        }
+        dbg!(ctx.request_headers());
 
         info!("Received: {:?}", req);
         let msg = format!("Hello {}", req.get_name());
         let mut resp = HelloReply::default();
         resp.set_message(msg);
 
-        let mut builder = MetadataBuilder::with_capacity(3);
-        builder.add_str("k2", "v2").unwrap();
-        let metadata = builder.build();
+        let mut builder = MetadataBuilder::new();
+        builder.add_str("key", "server-header").unwrap();
 
         let f = sink
-            .set_headers(metadata)
+            .set_headers(builder.build())
             .success(resp)
             .map_err(move |e| error!("failed to reply {:?}: {:?}", req, e))
             .map(|_| ());
@@ -57,16 +53,12 @@ impl Greeter for GreeterService {
     ) {
         info!("multi_hello");
         // Show metadata from client.
-        info!("Received headers:");
-        for (key, val) in ctx.request_headers() {
-            info!("{}: {}", key, std::str::from_utf8(val).unwrap());
-        }
+        dbg!(ctx.request_headers());
 
         // Send metadata to client.
         let mut builder = MetadataBuilder::with_capacity(3);
-        builder.add_str("k2", "v2").unwrap();
-        let metadata = builder.build();
-        let sink = sink.set_headers(metadata);
+        builder.add_str("key", "server-header").unwrap();
+        let headers = builder.build();
 
         let f = async move {
             // Collect names from stream.
@@ -92,7 +84,9 @@ impl Greeter for GreeterService {
 
             let mut resp = HelloReply::default();
             resp.set_message(msg.to_owned());
-            sink.success(resp).await?;
+            sink
+                .set_headers(headers)
+                .success(resp).await?;
             Ok(())
         }
         .map_err(|e: grpcio::Error| error!("failed to reply: {:?}", e))
@@ -106,6 +100,15 @@ impl Greeter for GreeterService {
         req: HelloRequest,
         mut sink: ServerStreamingSink<HelloReply>,
     ) {
+        info!("multi_reply");
+
+        dbg!(ctx.request_headers());
+
+        let mut builder = MetadataBuilder::with_capacity(3);
+        builder.add_str("key", "server-header").unwrap();
+        let metadata = builder.build();
+        sink.set_headers(metadata);
+
         let name = req.get_name();
         info!("Received \"{}\"", name);
 
@@ -135,6 +138,15 @@ impl Greeter for GreeterService {
         mut stream: RequestStream<HelloRequest>,
         mut sink: DuplexSink<HelloReply>,
     ) {
+        info!("duplex_hello");
+
+        dbg!(ctx.request_headers());
+
+        let mut builder = MetadataBuilder::with_capacity(3);
+        builder.add_str("key", "server-header").unwrap();
+        let metadata = builder.build();
+        sink.set_headers(metadata);
+
         let f = async move {
             let mut resp = HelloReply::default();
             resp.set_message("Hi, what are your names?".to_string());
@@ -156,9 +168,7 @@ impl Greeter for GreeterService {
         }
         .map_err(|e: grpcio::Error| error!("failed to reply: {:?}", e))
         .map(|_| ());
-        ctx.spawn(f)
-    }
-}
+        ctx.spawn(f) } }
 
 fn main() {
     env_logger::init();
