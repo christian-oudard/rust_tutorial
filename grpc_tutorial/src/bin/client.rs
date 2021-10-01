@@ -29,9 +29,9 @@ async fn async_main() -> Result<()> {
     let client = GreeterClient::new(ch);
     info!("Connected\n");
 
-    // unary(&client).await?;
-    // client_streaming(&client).await?;
-    // server_streaming(&client).await?;
+    unary(&client).await?;
+    client_streaming(&client).await?;
+    server_streaming(&client).await?;
     duplex(&client).await?;
 
     Ok(())
@@ -40,16 +40,18 @@ async fn async_main() -> Result<()> {
 async fn unary(client: &GreeterClient) -> Result<()> {
     // Send a single call.
     println!("\nunary\n");
-    let mut builder = MetadataBuilder::with_capacity(3);
-    builder.add_str("key", "client-header").unwrap();
-    let headers = builder.build();
 
-    let call_opt = CallOption::default().headers(headers);
+    let call_opt = {
+        let mut builder = MetadataBuilder::with_capacity(3);
+        builder.add_str("key", "client-header").unwrap();
+        let headers = builder.build();
+        CallOption::default().headers(headers)
+    };
 
     let mut req = HelloRequest::default();
     req.set_name("world".to_owned());
     let mut receiver: ClientUnaryReceiver<HelloReply> = client
-        .say_hello_async_opt(&req, call_opt.clone())
+        .say_hello_async_opt(&req, call_opt)
         .expect("rpc");
 
     let server_headers: &Metadata = receiver.headers().await.unwrap();
@@ -57,6 +59,7 @@ async fn unary(client: &GreeterClient) -> Result<()> {
 
     let reply: HelloReply = receiver.message().await?;
     info!("Greeter received: {}", reply.get_message());
+    drop(receiver);
 
     Ok(())
 }
