@@ -1,5 +1,3 @@
-// Copyright 2019 TiKV Project Authors. Licensed under Apache-2.0.
-
 use log::info;
 
 use futures::prelude::*;
@@ -111,7 +109,6 @@ async fn server_streaming(client: &GreeterClient) -> Result<()> {
     dbg!(headers);
 
     while let Some(reply) = receiver.try_next().await? {
-        println!("C");
         info!("Got: {}", reply.get_message());
     }
 
