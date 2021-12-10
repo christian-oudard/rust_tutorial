@@ -16,21 +16,47 @@ use grpcio::{
 };
 
 fn main() {
-    futures::executor::block_on(async_main()).unwrap()
-}
-
-async fn async_main() -> Result<()> {
-    // Connect to server.
     env_logger::init();
+    // Connect to server.
     let env = Arc::new(EnvBuilder::new().build());
     let ch = ChannelBuilder::new(env).connect(&format!("localhost:{}", PORT));
     let client = GreeterClient::new(ch);
     info!("Connected\n");
 
-    unary(&client).await?;
-    client_streaming(&client).await?;
-    server_streaming(&client).await?;
-    duplex(&client).await?;
+    futures::executor::block_on(async_main(&client)).unwrap();
+    unary_sync(&client).unwrap();
+}
+
+async fn async_main(client: &GreeterClient) -> Result<()> {
+
+    unary(client).await?;
+    client_streaming(client).await?;
+    server_streaming(client).await?;
+    duplex(client).await?;
+
+    Ok(())
+}
+
+fn unary_sync(client: &GreeterClient) -> Result<()> {
+    // Send a single call.
+    println!("\nunary synchcronous\n");
+
+    let call_opt = {
+        let mut builder = MetadataBuilder::with_capacity(3);
+        builder.add_str("key", "client-header").unwrap();
+        let headers = builder.build();
+        CallOption::default().headers(headers)
+    };
+
+    let mut req = HelloRequest::default();
+    req.set_name("world".to_owned());
+    let mut receiver: ClientUnaryReceiver<HelloReply> = client
+        .say_hello_async_opt(&req, call_opt)
+        .expect("rpc");
+
+    let (server_headers, reply, _) = receiver.receive_sync()?;
+    dbg!(server_headers);
+    info!("Greeter received: {}", reply.get_message());
 
     Ok(())
 }
@@ -57,7 +83,6 @@ async fn unary(client: &GreeterClient) -> Result<()> {
 
     let reply: HelloReply = receiver.message().await?;
     info!("Greeter received: {}", reply.get_message());
-    drop(receiver);
 
     Ok(())
 }

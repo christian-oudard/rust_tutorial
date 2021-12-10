@@ -32,3 +32,23 @@ fn fib_iter(n: u32) -> u32 {
     }
     return b;
 }
+
+
+// struct Fibonacci<T> {
+//     cur: T,
+//     last: T,
+// }
+
+// impl<T> Fibonacci<T> {
+//     fn new() -> Fibonacci<T> {
+//         Fibonacci { last: 0, cur: 1 }
+//     }
+// }
+
+// impl Iterator for Fibonacci {
+//     type Item = u32;
+//     fn next(&mut self) -> Option<Self::Item> {
+//     }
+// }
+
+

@@ -9,7 +9,8 @@ build = "build.rs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-grpcio = { git = "https://github.com/mobilecoinofficial/grpc-rs", rev = "ee85deb14bbc443700e24bd4ac18b98e120ed03c" }
+# grpcio = { git = "https://github.com/mobilecoinofficial/grpc-rs", rev = "ee85deb14bbc443700e24bd4ac18b98e120ed03c" }
+grpcio = { path = "/home/christian/third-party-code/grpc-rs" }
 grpcio-proto = "0.9.0"
 protobuf = "~2"
 log = "0.4.0"

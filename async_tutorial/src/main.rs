@@ -1,7 +1,7 @@
+use async_std::task::sleep;
 use futures::executor::block_on;
 use futures::future::FutureExt;
 use rand::{thread_rng, Rng};
-use async_std::task::sleep;
 use std::time::Duration;
 
 async fn sleep_random(lo: u64, hi: u64) {
@@ -24,7 +24,6 @@ async fn async_main() {
     let f = hello_world(42);
     f.await;
 
-
     let future = async { 6 };
     let shared1 = future.shared();
     let shared2 = shared1.clone();
@@ -35,5 +34,5 @@ async fn async_main() {
 
 fn main() {
     block_on(async_main());
+    block_on(async { println!("async block") });
 }
-
