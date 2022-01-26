@@ -13,5 +13,8 @@ name = "option"
 [[bin]]
 name = "default"
 
+[[bin]]
+name = "iterator"
+
 [dependencies]
 
