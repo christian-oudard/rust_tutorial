@@ -5,4 +5,6 @@ fn main() {
     let v = vec![None, Some(1), Some(2), None, Some(4)];
     dbg!(v.iter().filter(|x| x.is_some()).collect::<Vec<_>>());
     dbg!(v.iter().filter_map(|x| *x).collect::<Vec<_>>());
+
+    dbg!(vec!["a", "b", "c"].into_iter().collect::<String>());
 }
