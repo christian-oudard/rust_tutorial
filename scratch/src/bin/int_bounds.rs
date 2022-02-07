@@ -18,4 +18,13 @@ fn main() {
     check!(i64);
     check!(u128);
     check!(i128);
+
+    assert_eq!(average(240, 250), 245);
+    assert_eq!(average(241, 249), 245);
+    assert_eq!(average(241, 250), 245);
+    assert_eq!(average(240, 251), 245);
+}
+
+fn average(a: u8, b:u8) -> u8 {
+    a / 2 + b / 2 + (a & b & 1)
 }
