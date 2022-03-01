@@ -1,16 +1,14 @@
-use super::schema::posts;
+use super::schema::counter;
 
 #[derive(Queryable)]
-pub struct Post {
+pub struct Counter {
     pub id: i32,
-    pub title: String,
-    pub body: String,
-    pub published: bool,
+    pub value: i64,
 }
 
 #[derive(Insertable)]
-#[table_name = "posts"]
-pub struct NewPost<'a> {
-    pub title: &'a str,
-    pub body: &'a str,
+#[table_name="counter"]
+pub struct NewCounter {
+    pub value: i64,
 }
+

@@ -1,21 +1,7 @@
 [package]
-name = "diesel_demo_step_2_sqlite"
+name = "diesel_tutorial"
 version = "0.1.0"
-license = "MIT OR Apache-2.0"
-authors = ["Taryn Hill <taryn@phrohdoh.com>"]
 
 [dependencies]
-# diesel = { version = "1.4.6", features = ["sqlite"] }
-diesel = { git = "https://github.com/mobilecoinofficial/diesel", branch = "1.4.x-bundled-sqlcipher", features = ["sqlite", "sqlcipher-bundled"] }
-dotenv = "0.10"
-
-[[bin]]
-name = "show_posts"
-doc = false
-
-[[bin]]
-name = "write_post"
-doc = false
-
-[lib]
-doc = false
+diesel = { version = "1.4.8", features = ["sqlite"] }
+dotenv = "0.15.0"

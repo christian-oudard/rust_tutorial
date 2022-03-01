@@ -1,8 +1,6 @@
 table! {
-    posts (id) {
+    counter (id) {
         id -> Integer,
-        title -> Text,
-        body -> Text,
-        published -> Bool,
+        value -> BigInt,
     }
 }
