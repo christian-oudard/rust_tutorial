@@ -32,7 +32,7 @@ fn establish_connection() -> SqliteConnection {
 }
 
 fn main() {
-    let conn = establish_connection();
+   let conn = establish_connection();
 
     // Delete all rows.
     diesel::delete(counter::table).execute(&conn).unwrap();
