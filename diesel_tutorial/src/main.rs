@@ -1,6 +1,5 @@
 #[macro_use]
 extern crate diesel;
-extern crate dotenv;
 
 pub mod models;
 pub mod schema;
@@ -10,16 +9,13 @@ use schema::counter;
 
 use diesel::prelude::*;
 use diesel::connection::SimpleConnection;
+use diesel::result::Error;
 
-use dotenv::dotenv;
-use std::env;
+const DATABASE_URL: &str = "test.db";
 
 fn establish_connection() -> SqliteConnection {
-    dotenv().ok();
-
-    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    let conn = SqliteConnection::establish(&database_url)
-        .unwrap_or_else(|_| panic!("Error connecting to {}", database_url));
+    let conn = SqliteConnection::establish(&DATABASE_URL)
+        .unwrap_or_else(|_| panic!("Error connecting to {}", DATABASE_URL));
 
     conn.batch_execute("
         PRAGMA journal_mode = WAL;
@@ -32,22 +28,30 @@ fn establish_connection() -> SqliteConnection {
 }
 
 fn main() {
-   let conn = establish_connection();
+    let conn = establish_connection();
+
+    use schema::counter::dsl::{counter, value};
 
     // Delete all rows.
-    diesel::delete(counter::table).execute(&conn).unwrap();
+    diesel::delete(counter).execute(&conn).unwrap();
 
     // Start the new counter at zero.
-    diesel::insert_into(counter::table)
+    diesel::insert_into(counter)
         .values(&NewCounter { value: 0 })
         .execute(&conn)
         .unwrap();
 
-    use schema::counter::dsl::value;
-    for _ in 0..10000 {
-        diesel::update(counter::table)
-            .set(value.eq(value + 1))
-            .execute(&conn)
-            .unwrap();
+    for _ in 0..255 {
+        conn.transaction::<_, Error, _>(|| {
+            let val = counter.select(value).get_result::<i64>(&conn).unwrap();
+            let mut val = val as u64;
+            val += 1<<56;
+            println!("{}", val);
+
+            diesel::update(counter)
+                .set(value.eq(val as i64))
+                .execute(&conn)
+        }).unwrap();
     }
+    println!("{}", u64::MAX);
 }
