@@ -5,7 +5,6 @@ pub mod models;
 pub mod schema;
 
 use models::NewCounter;
-use schema::counter;
 
 use diesel::prelude::*;
 use diesel::connection::SimpleConnection;
