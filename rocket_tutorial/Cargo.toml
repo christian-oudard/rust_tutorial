@@ -1,14 +1,9 @@
 [package]
 name = "rocket_tutorial"
 version = "0.1.0"
-authors = ["Christian Oudard <christian.oudard@gmail.com>"]
-edition = "2018"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rocket = { version = "0.4.5", default-features = false }
-rocket_contrib = { version = "0.4.5", default-features = false, features = ["json", "diesel_sqlite_pool"] }
-diesel = { version = "1.4", features = ["sqlite"] }
-diesel-derive-enum = { version = "1", features = ["sqlite"] }
-diesel_migrations = { version = "1.4.0", features = ["sqlite"] }
+rocket = { version = "0.4.10", default-features = false }
+rocket_contrib = { version = "0.4.10", default-features = false, features = ["diesel_sqlite_pool"] }
+diesel = { version = "1.4.8", features = ["sqlite", "r2d2"] }
+r2d2 = "0.8.9"
