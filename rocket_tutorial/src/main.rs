@@ -55,39 +55,43 @@ struct Customizer;
 
 impl diesel::r2d2::CustomizeConnection<SqliteConnection, diesel::r2d2::Error> for Customizer {
     fn on_acquire(&self, conn: &mut SqliteConnection) -> Result<(), diesel::r2d2::Error> {
-        conn.batch_execute("
-            PRAGMA journal_mode = WAL;          -- better write-concurrency
-            PRAGMA synchronous = NORMAL;        -- fsync only in critical moments
-            PRAGMA wal_autocheckpoint = 1000;   -- write WAL changes back every 1000 pages, for an in average 1MB WAL file. May affect readers if number is increased
-            PRAGMA wal_checkpoint(TRUNCATE);    -- free some space by truncating possibly massive WAL files from the last run.
-            PRAGMA foreign_keys = ON;
-            PRAGMA busy_timeout = 5;
-        ").map_err(diesel::r2d2::Error::QueryError)
+        Ok((|| {
+            // Set busy timeout first, to minimize database locking.
+            conn.batch_execute("PRAGMA busy_timeout = 1000;")?;
+            conn.batch_execute("
+                PRAGMA journal_mode = WAL;          -- better write-concurrency
+                PRAGMA synchronous = NORMAL;        -- fsync only in critical moments
+                PRAGMA wal_autocheckpoint = 1000;   -- write WAL changes back every 1000 pages, for an in average 1MB WAL file. May affect readers if number is increased
+                PRAGMA wal_checkpoint(TRUNCATE);    -- free some space by truncating possibly massive WAL files from the last run.
+                PRAGMA foreign_keys = ON;
+            ")?;
+            Ok(())
+        })().map_err(diesel::r2d2::Error::QueryError)?)
     }
 }
 
 #[get("/")]
 fn index(conn: DbConn) -> String {
     let val: u64 = counter.select(value).get_result::<i64>(&*conn).unwrap() as u64;
-    format!("Counter value: {}\n", val).to_string()
+    format!("{}", val).to_string()
 }
 
 #[post("/")]
 fn index_post(conn: DbConn) {
-    conn.transaction(|| {
+    conn.transaction::<_, diesel::result::Error, _>(|| {
         let val: u64 = counter.select(value).get_result::<i64>(&*conn).unwrap() as u64;
         diesel::update(counter)
             .set(value.eq((val + 1) as i64))
-            .execute(&*conn)
-    })
-    .unwrap();
+            .execute(&*conn).unwrap();
+        Ok(())
+    }).unwrap();
 }
 
 fn main() {
     let manager = ConnectionManager::new("db.sqlite");
     let pool = Pool::builder()
         .connection_customizer(Box::new(Customizer))
-        .max_size(3)
+        .max_size(5)
         .connection_timeout(Duration::from_secs(1))
         .build(manager)
         .expect("Could not create database connection pool.");
