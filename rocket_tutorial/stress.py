@@ -29,7 +29,7 @@ async def main():
     loop = asyncio.get_event_loop()
     results = await asyncio.gather(*[
         loop.run_in_executor(None, increment_counter)
-        for _ in range(10)
+        for _ in range(20)
     ])
     print(results)
 

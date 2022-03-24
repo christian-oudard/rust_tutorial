@@ -1,111 +1,79 @@
-#![feature(proc_macro_hygiene, decl_macro)]
+#[macro_use] extern crate rocket;
+#[macro_use] extern crate rocket_sync_db_pools;
+#[macro_use] extern crate diesel_migrations;
+#[macro_use] extern crate diesel;
 
-use std::time::Duration;
+use rocket::{Rocket, Build};
+use rocket::fairing::AdHoc;
+use rocket::response::{Debug};
 
-#[macro_use]
-extern crate rocket;
-#[macro_use]
-extern crate diesel;
-extern crate r2d2;
-extern crate rocket_contrib;
-use diesel::connection::{Connection, SimpleConnection};
-use diesel::prelude::*;
-use diesel::r2d2::{ConnectionManager, Pool};
-use diesel::SqliteConnection;
-use rocket::request::{self, FromRequest, Request};
-use rocket_contrib::databases::Poolable;
+use self::diesel::prelude::*;
 
-pub mod models;
-pub mod schema;
-use models::NewCounter;
-use schema::counter::dsl::{counter, value};
+#[database("sqlite_database")]
+struct Db(diesel::SqliteConnection);
 
-struct DbConn(pub r2d2::PooledConnection<<SqliteConnection as Poolable>::Manager>);
-struct DbConnPool(r2d2::Pool<<SqliteConnection as Poolable>::Manager>);
+type Result<T, E = Debug<diesel::result::Error>> = std::result::Result<T, E>;
 
-impl<'a, 'r> FromRequest<'a, 'r> for DbConn {
-    type Error = ();
 
-    fn from_request(request: &'a Request<'r>) -> request::Outcome<Self, Self::Error> {
-        use ::rocket::{http::Status, Outcome};
-        let pool = request.guard::<::rocket::State<DbConnPool>>()?;
-
-        match pool.0.get() {
-            Ok(conn) => Outcome::Success(DbConn(conn)),
-            Err(_) => Outcome::Failure((Status::ServiceUnavailable, ())),
-        }
-    }
+#[derive(Debug, Clone, Queryable, Insertable)]
+#[table_name="counter"]
+struct Counter {
+    id: i32,
+    value: i64,
 }
 
-impl ::std::ops::Deref for DbConn {
-    type Target = SqliteConnection;
-    fn deref(&self) -> &Self::Target {
-        &self.0
+table! {
+    counter (id) {
+        id -> Integer,
+        value -> BigInt,
     }
-}
-
-impl ::std::ops::DerefMut for DbConn {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
-
-#[derive(Debug)]
-struct Customizer;
-
-impl diesel::r2d2::CustomizeConnection<SqliteConnection, diesel::r2d2::Error> for Customizer {
-    fn on_acquire(&self, conn: &mut SqliteConnection) -> Result<(), diesel::r2d2::Error> {
-        Ok((|| {
-            // Set busy timeout first, to minimize database locking.
-            conn.batch_execute("PRAGMA busy_timeout = 1000;")?;
-            conn.batch_execute("
-                PRAGMA journal_mode = WAL;          -- better write-concurrency
-                PRAGMA synchronous = NORMAL;        -- fsync only in critical moments
-                PRAGMA wal_autocheckpoint = 1000;   -- write WAL changes back every 1000 pages, for an in average 1MB WAL file. May affect readers if number is increased
-                PRAGMA wal_checkpoint(TRUNCATE);    -- free some space by truncating possibly massive WAL files from the last run.
-                PRAGMA foreign_keys = ON;
-            ")?;
-            Ok(())
-        })().map_err(diesel::r2d2::Error::QueryError)?)
-    }
-}
-
-#[get("/")]
-fn index(conn: DbConn) -> String {
-    let val: u64 = counter.select(value).get_result::<i64>(&*conn).unwrap() as u64;
-    format!("{}", val).to_string()
 }
 
 #[post("/")]
-fn index_post(conn: DbConn) {
-    conn.transaction::<_, diesel::result::Error, _>(|| {
-        let val: u64 = counter.select(value).get_result::<i64>(&*conn).unwrap() as u64;
-        diesel::update(counter)
-            .set(value.eq((val + 1) as i64))
-            .execute(&*conn).unwrap();
-        Ok(())
-    }).unwrap();
+async fn increment(db: Db) -> Result<()> {
+    db.run(move |conn| {
+        conn.transaction::<_, diesel::result::Error, _>(|| {
+            let val: u64 = counter::table.select(counter::value).get_result::<i64>(conn)? as u64;
+            diesel::update(counter::table)
+                .set(counter::value.eq((val + 1) as i64))
+                .execute(&*conn)
+        })
+    }).await?;
+    Ok(())
 }
 
-fn main() {
-    let manager = ConnectionManager::new("db.sqlite");
-    let pool = Pool::builder()
-        .connection_customizer(Box::new(Customizer))
-        .max_size(5)
-        .connection_timeout(Duration::from_secs(1))
-        .build(manager)
-        .expect("Could not create database connection pool.");
+#[get("/")]
+async fn get(db: Db) -> Result<String> {
+    let value: u64 = db.run(move |conn| {
+        counter::table.select(counter::value).get_result::<i64>(conn)
+    }).await? as u64;
+    Ok(value.to_string())
+}
 
-    // Delete all rows and start the new counter at zero.
-    let conn = pool.get().unwrap();
-    diesel::delete(counter).execute(&conn).unwrap();
-    diesel::insert_into(counter)
-        .values(&NewCounter { value: 0 })
-        .execute(&conn)
-        .unwrap();
 
-    rocket::ignite()
-        .manage(DbConnPool(pool))
-        .mount("/", routes![index, index_post])
-        .launch();
+async fn run_migrations(rocket: Rocket<Build>) -> Rocket<Build> {
+    // This macro from `diesel_migrations` defines an `embedded_migrations`
+    // module containing a function named `run` that runs the migrations in the
+    // specified directory, initializing the database.
+    embed_migrations!("migrations");
+
+    let conn = Db::get_one(&rocket).await.expect("database connection");
+    conn.run(|c| embedded_migrations::run(c)).await.expect("diesel migrations");
+
+    rocket
+}
+
+pub fn diesel_sqlite_stage() -> AdHoc {
+    AdHoc::on_ignite("Diesel SQLite Stage", |rocket| async {
+        rocket.attach(Db::fairing())
+            .attach(AdHoc::on_ignite("Diesel Migrations", run_migrations))
+            .mount("/", routes![increment, get])
+    })
+}
+
+
+#[launch]
+fn rocket() -> _ {
+    rocket::build()
+        .attach(diesel_sqlite_stage())
 }
