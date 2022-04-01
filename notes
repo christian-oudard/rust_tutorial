@@ -8,7 +8,6 @@ http://nercury.github.io/rust/opengl/tutorial/2018/02/08/opengl-in-rust-from-scr
 
 Vim Plugins
 https://github.com/rust-lang/rust.vim
-https://github.com/racer-rust/vim-racer
 
 Install Rust:
 $ sudo snap install --classic rustup
