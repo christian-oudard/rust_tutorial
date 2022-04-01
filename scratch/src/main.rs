@@ -1,8 +1,7 @@
 fn main() {
-    let s = "test";
-    let mut v: Vec<_> = s.chars().collect();
-    v.sort();
-    v.dedup();
-    dbg!(&v);
-    dbg!(&v.len());
+    let s = "abcdefg";
+    let v: Vec<_> = s.chars().collect();
+    for w in v.windows(3) {
+        dbg!(w);
+    }
 }
