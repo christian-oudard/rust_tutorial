@@ -1,5 +1,0 @@
-[default]
-log_level = "debug"
-
-[global.databases.sqlite_database]
-url = "db.sqlite"
