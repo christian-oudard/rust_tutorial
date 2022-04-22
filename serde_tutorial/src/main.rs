@@ -5,7 +5,7 @@ use serde_json::{
 };
 
 fn main() {
-    // untyped_example().expect("serde error");
+    untyped_example().expect("serde error");
     typed_example().expect("serde error");
 }
 
@@ -36,7 +36,6 @@ fn untyped_example() -> Result<()> {
 
 #[derive(Serialize, Deserialize)]
 struct Response {
-    #[serde(skip_serializing_if = "Option::is_none")]
     result: Option<RPCResult>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -59,6 +58,13 @@ fn typed_example() -> Result<()> {
 
     // Do things just like with any other Rust data structure.
     println!("result: {:?}", response.result);
+    println!("{}", to_string_pretty(&response)?);
+
+    let response: Response = serde_json::from_str(r#"
+        {
+            "error": null
+        }
+    "#)?;
     println!("{}", to_string_pretty(&response)?);
 
     Ok(())
