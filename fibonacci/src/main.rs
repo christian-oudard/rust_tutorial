@@ -1,22 +1,20 @@
 use cached::proc_macro::cached;
 
 fn main() {
-    println!("{}", fib_iter(30));
-    println!("{}", fib(30));
+    println!("{}", fib_iter(50));
+    println!("{}", fib(50));
 }
 
 #[cached]
-fn fib(n: u32) -> u32 {
-    if n == 1 {
-        return 1;
+fn fib(n: u64) -> u64 {
+    match n {
+        0 => 0,
+        1 => 1,
+        _ => fib(n-1) + fib(n-2),
     }
-    if n == 2 {
-        return 1;
-    }
-    return fib(n - 1) + fib(n - 2);
 }
 
-fn fib_iter(n: u32) -> u32 {
+fn fib_iter(n: u64) -> u64 {
     if n == 0 {
         return 0;
     }
@@ -24,7 +22,7 @@ fn fib_iter(n: u32) -> u32 {
         return 1;
     }
     let (mut a, mut b) = (0, 1);
-    let mut c: u32;
+    let mut c: u64;
     for _ in 2..=n {
         c = a + b;
         a = b;
@@ -46,7 +44,7 @@ fn fib_iter(n: u32) -> u32 {
 // }
 
 // impl Iterator for Fibonacci {
-//     type Item = u32;
+//     type Item = u64;
 //     fn next(&mut self) -> Option<Self::Item> {
 //     }
 // }
