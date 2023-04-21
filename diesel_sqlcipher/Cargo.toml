@@ -1,0 +1,10 @@
+[package]
+name = "diesel_sqlcipher"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+diesel = { version = "2.0.3", features = ["chrono", "sqlite", "r2d2", "returning_clauses_for_sqlite_3_35"] }
+diesel-derive-enum = { version = "2", features = ["sqlite"] }
+diesel_migrations = { version = "2.0.0", features = ["sqlite"] }
+libsqlite3-sys = { version = "0.25", features = ["bundled-sqlcipher"] }
