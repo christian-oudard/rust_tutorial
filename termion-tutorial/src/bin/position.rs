@@ -16,7 +16,7 @@ fn main() {
     print!("{}", termion::cursor::Hide);
 
     std::io::stdout().flush().unwrap();
-    std::thread::sleep(std::time::Duration::from_secs(2));
+    std::thread::sleep(std::time::Duration::from_secs(4));
 
     write!(stdout, "{}", termion::cursor::Goto(1, 1)).unwrap();
     print!("{}", termion::cursor::Show);

@@ -1,12 +1,12 @@
-// RUST_LOG=trace cargo run
+#[macro_use]
+extern crate log;
 
-use log::{trace, debug, info, warn, error};
+use simplelog::*;
+use std::fs::File;
 
 fn main() {
-    env_logger::init();
-    trace!("logger initialized");
-    debug!("about to send info message");
-    info!("Hello, logger.");
-    warn!("Maybe gonna send an error message");
-    error!("Problem!");
+    WriteLogger::init(LevelFilter::Info, Config::default(), File::create("log").unwrap()).unwrap();
+    error!("Bright red error");
+    info!("This only appears in the log file");
+    debug!("This level is currently not enabled for any logger");
 }
